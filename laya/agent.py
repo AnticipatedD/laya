@@ -1,5 +1,6 @@
 """High-level inference runtime for laya System 1 decision models."""
 import json
+import logging
 import os
 import warnings
 from typing import Any, Dict, Optional, Union
@@ -21,6 +22,7 @@ from .common import (
     temp_bucket,
 )
 
+logger = logging.getLogger("laya")
 
 def _fix_tokenizer_config(path: str):
     """Ensure tokenizer_config.json can be loaded across all transformers versions."""
@@ -46,9 +48,8 @@ def _fix_tokenizer_config(path: str):
         if changed:
             with open(cfg_file, "w") as f:
                 json.dump(tcfg, f, indent=2)
-    except Exception:
-        pass
-
+    except Exception as exc:
+        logger.debug("tokenizer_config patch skipped: %s", exc)
 
 def _verify_compatibility(model: torch.nn.Module, cfg: Dict, weights: Dict[str, torch.Tensor], model_id: str):
     """Verify that the loaded checkpoint weights and config strictly match the expected architecture."""

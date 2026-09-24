@@ -41,7 +41,19 @@ Three checkpoints, and a `Router` that picks between them per request:
 ```bash
 pip install laya
 ```
+### Environment variables
 
+| Variable | Required | Description |
+|---|---|---|
+| `HF_TOKEN` | No | Hugging Face token for private/rate-limited Hub access. Optional for public checkpoints. |
+| `BENCH_N` | No | Sample size for research benchmark scripts (`research/scripts/bench_*.py`). Defaults to 400. |
+| `LAYA_MODEL_DIR` | No | Directory for local checkpoints used by research scripts. Defaults to `./models`. |
+
+Copy `.env.example` to `.env` and fill in values if needed:
+
+```bash
+cp .env.example .env
+```
 Python 3.10 or newer. The dependencies set that floor: `huggingface_hub` 1.x, `transformers` 5.x and `torch` 2.14 all require 3.10.
 
 ---

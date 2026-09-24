@@ -27,11 +27,14 @@ primary routing signal.
 `auto_task_detection=True` or pass `task="typed_decisions"`: it is fine-tuned on four specific
 synthetic workflows and should not be a silent default.
 """
+import logging
 import os
 import threading
 from typing import Any, Dict, List, Optional, Union
 
 from .lang import analyse
+
+logger = logging.getLogger("laya")
 
 # The hub repo bundles all three checkpoints; only the requested subfolder is downloaded.
 BUNDLE_REPO = "convaiinnovations/laya"
@@ -253,6 +256,10 @@ class Router:
         with self._lock:
             return list(self._order)
 
+    def _log_decision(self, decision: RouteDecision) -> RouteDecision:
+        logger.info("routed to %s: %s", decision.model, decision.reason)
+        return decision
+
     # ------------------------------------------------------------------ routing
     def route(
         self,
@@ -269,24 +276,43 @@ class Router:
         """
         if model is not None:
             key = normalise_name(model)
-            return RouteDecision(model=key, repo=_repo_str(self.models[key]), reason="explicit model=%r" % model,
-                                 detection=None, workflow=None)
+            return self._log_decision(RouteDecision(
+                model=key, repo=_repo_str(self.models[key]),
+                reason="explicit model=%r" % model,
+                detection=None, workflow=None,
+            ))
 
         if task is not None:
-            key = normalise_name("typed-decisions" if str(task).lower().replace("-", "_") == "typed_decisions" else task)
-            return RouteDecision(model=key, repo=_repo_str(self.models[key]), reason="explicit task=%r" % task,
-                                 detection=None, workflow=None)
+            key = normalise_name(
+                "typed-decisions"
+                if str(task).lower().replace("-", "_") == "typed_decisions"
+                else task
+            )
+            return self._log_decision(RouteDecision(
+                model=key, repo=_repo_str(self.models[key]),
+                reason="explicit task=%r" % task,
+                detection=None, workflow=None,
+            ))
 
         workflow = match_typed_decisions_workflow(questions or {})
         if workflow and self.auto_task_detection:
-            return RouteDecision(model="typed-decisions", repo=self.models["typed-decisions"],
-                                 reason="question ids match the %r typed-decisions workflow" % workflow,
-                                 detection=None, workflow=workflow)
+            return self._log_decision(RouteDecision(
+                model="typed-decisions", repo=self.models["typed-decisions"],
+                reason="question ids match the %r typed-decisions workflow" % workflow,
+                detection=None, workflow=workflow,
+            ))
 
         if lang is not None:
-            key = "english" if str(lang).lower().split("-")[0] in ("en", "eng", "english") else "multilingual"
-            return RouteDecision(model=key, repo=_repo_str(self.models[key]), reason="explicit lang=%r" % lang,
-                                 detection=None, workflow=workflow)
+            key = (
+                "english"
+                if str(lang).lower().split("-")[0] in ("en", "eng", "english")
+                else "multilingual"
+            )
+            return self._log_decision(RouteDecision(
+                model=key, repo=_repo_str(self.models[key]),
+                reason="explicit lang=%r" % lang,
+                detection=None, workflow=workflow,
+            ))
 
         det = analyse(state)
         if det["script"] == "unknown":
@@ -294,8 +320,10 @@ class Router:
             reason = "no letters detected in state; using default (%s)" % key
         elif det["script"] != "latin":
             key = "multilingual"
-            reason = "non-Latin script (%s, %.0f%% of letters); the English checkpoint cannot read it" % (
-                det["script"], 100 * float(det["non_latin_fraction"]))
+            reason = (
+                "non-Latin script (%s, %.0f%% of letters); the English checkpoint cannot read it"
+                % (det["script"], 100 * float(det["non_latin_fraction"]))
+            )
         elif not det["is_english"]:
             key = "multilingual"
             if det["language"]:
@@ -303,13 +331,18 @@ class Router:
             else:
                 # Unidentified Latin-script language: routed on the non-English letters alone,
                 # because no stopword list here covers it.
-                reason = ("Latin script, language not identified but %.0f%% non-English letters; "
-                          "not safe for the English checkpoint" % (100 * float(det["diacritic_rate"])))
+                reason = (
+                    "Latin script, language not identified but %.0f%% non-English letters; "
+                    "not safe for the English checkpoint"
+                    % (100 * float(det["diacritic_rate"]))
+                )
         else:
             key = "english"
             reason = "English Latin text"
-        return RouteDecision(model=key, repo=_repo_str(self.models[key]), reason=reason,
-                             detection=det, workflow=workflow)
+        return self._log_decision(RouteDecision(
+            model=key, repo=_repo_str(self.models[key]), reason=reason,
+            detection=det, workflow=workflow,
+        ))
 
     # ------------------------------------------------------------------ running
     def predict(
@@ -325,6 +358,8 @@ class Router:
         The result is the usual `system_one` payload plus a `routing` key recording the decision.
         """
         decision = self.route(state, questions, model=model, task=task, lang=lang)
+        # route() already logs; keep an explicit predict-level log for callers that only use predict
+        logger.info("routed to %s: %s", decision.model, decision.reason)
         agent = self.load(decision["model"])
         result = agent.system_one(state, questions)
         result["routing"] = dict(decision)
@@ -333,4 +368,6 @@ class Router:
     system_one = predict
 
     def __repr__(self):
-        return "Router(loaded=%s, max_loaded=%d, default=%r)" % (self.loaded, self.max_loaded, self.default)
+        return "Router(loaded=%s, max_loaded=%d, default=%r)" % (
+            self.loaded, self.max_loaded, self.default,
+)

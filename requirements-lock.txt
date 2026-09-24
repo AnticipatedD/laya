@@ -1,0 +1,29 @@
+# Pinned runtime lockfile for reproducible installs.
+# Generated to match pyproject.toml dependencies (torch, transformers, safetensors,
+# huggingface_hub, numpy) plus common transitive pins used by the Laya stack.
+# CI installs CPU torch first, then this file, then `pip install -e .`.
+
+# --- direct runtime deps (from pyproject.toml) ---
+torch==2.8.0
+transformers==4.57.1
+safetensors==0.6.2
+huggingface-hub==0.35.3
+numpy==2.2.6
+
+# --- common transitive pins (stable set used by transformers / hub) ---
+filelock==3.18.0
+fsspec==2025.3.2
+packaging==25.0
+pyyaml==6.0.2
+regex==2024.11.6
+requests==2.32.4
+tokenizers==0.21.4
+tqdm==4.67.1
+typing-extensions==4.14.0
+
+# --- 
+**Note**: *Exact patch versions can drift on PyPI. If pip install -r requirements-lock.txt fails on a missing version, run*:
+```bash
+pip install "torch>=2.0" "transformers>=4.48" "safetensors>=0.4" "huggingface_hub>=0.20" "numpy>=1.20"
+pip freeze | grep -E '^(torch|transformers|safetensors|huggingface-hub|numpy|tokenizers|filelock|fsspec|packaging|pyyaml|regex|requests|tqdm|typing-extensions)==' > requirements-lock.txt
+```

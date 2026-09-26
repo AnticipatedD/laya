@@ -2,13 +2,22 @@
 import logging
 import os
 import sys
+import pytest
+from laya.router import Router
 
+def test_router_logging(caplog):
+    router = Router()
+    with caplog.at_level(logging.INFO):
+        decision = router.route("hello world")
+        assert any("routed to" in rec.message for rec in caplog.records)
+        assert decision is not None
+        
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from laya.router import Router  # noqa: E402
+```bash
+pytest tests/test_logging.py
 
 PASS, FAIL = [], []
-
 
 def check(name, cond):
     if cond:

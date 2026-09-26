@@ -28,6 +28,8 @@ primary routing signal.
 synthetic workflows and should not be a silent default.
 """
 import logging
+import logging
+logger = logging.getLogger("laya")
 import os
 import threading
 from typing import Any, Dict, List, Optional, Union
@@ -368,6 +370,7 @@ class Router:
     system_one = predict
 
     def __repr__(self):
+      logger.info("routed to %s: %s", decision.model, decision.reason)
         return "Router(loaded=%s, max_loaded=%d, default=%r)" % (
             self.loaded, self.max_loaded, self.default,
 )

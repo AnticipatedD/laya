@@ -159,6 +159,12 @@ The English checkpoint collapses on non-Latin scripts (Khmer scores **0.000 accu
 
 A cold checkpoint build costs seconds; language detection costs microseconds. At the default `max_loaded=1`, traffic that alternates languages rebuilds a model on *every* request (measured at a 7.4 s median reload on CPU and 10.3 s on T4).
 
+## Reproducibility
+
+Benchmark scripts (`research/scripts/bench_local.py`, `bench_apps.py`) can be run from a fresh clone using the provided `.env.example`.  
+Set `LAYA_MODEL_DIR=./models` or use the `--download` flag to automatically fetch checkpoints from Hugging Face.  
+This ensures results are reproducible without local hardcoded paths.
+
 For a server or production app, preload:
 
 ```python
@@ -458,7 +464,12 @@ If Laya helps your research or products, consider supporting independent researc
 </p>
 
 ---
+## Contributing & Changelog
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on pull requests and coding standards.  
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
+---
 ## License
 
 Apache 2.0. Developed by Convai Innovations.

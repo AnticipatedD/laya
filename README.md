@@ -134,6 +134,10 @@ Inspect a routing decision without running any forward pass:
 router.route({"body": "Der Kunde wurde zweimal belastet"}, questions).reason
 # "Latin script but language looks like 'de', not English"
 ```
+## Environment Variables
+
+- `HF_TOKEN` (optional): Hugging Face token for downloading private or rate-limited checkpoints.
+- `BENCH_N` (default: 400): Number of samples used in research benchmark scripts.
 
 ### Why Route: The Evidence
 

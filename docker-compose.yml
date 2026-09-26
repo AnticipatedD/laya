@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  laya:
+    build: .
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - BENCH_N=${BENCH_N:-400}
+    volumes:
+      - .:/app
+    command: pytest --cov=laya --cov-report=term-missing --cov-fail-under=60 tests/

@@ -1,6 +1,8 @@
 """High-level inference runtime for laya System 1 decision models."""
 import json
 import logging
+import logging
+logger = logging.getLogger("laya")
 import os
 import warnings
 from typing import Any, Dict, Optional, Union
@@ -26,6 +28,8 @@ logger = logging.getLogger("laya")
 
 def _fix_tokenizer_config(path: str):
     """Ensure tokenizer_config.json can be loaded across all transformers versions."""
+    except Exception as exc:
+    logger.debug("tokenizer_config patch skipped: %s", exc)
     cfg_file = os.path.join(path, "tokenizer", "tokenizer_config.json")
     if not os.path.exists(cfg_file):
         return
